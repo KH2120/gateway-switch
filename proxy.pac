@@ -58,7 +58,7 @@ function FindProxyForURL(url, host) {
         "ele.me","ctrip.com","suning.com","dianping.com",
         "amap.com","autonavi.com","mi.com","miui.com",
         "ifeng.com","youdao.com","iciba.com","xunlei.com",
-        "smzdm.com","sspai.com","36kr.com","speedtest.net",
+        "lanhuapp.com","smzdm.com","sspai.com","36kr.com","speedtest.net",
         "microsoft.com","microsoftonline.com","office.com","office365.com",
         "windows.com","windowsupdate.com","live.com","msn.com",
         "cn"
