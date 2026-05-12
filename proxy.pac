@@ -30,14 +30,19 @@ function FindProxyForURL(url, host) {
     if (host === "safebrowsing.urlsec.qq.com") return "PROXY 192.168.103.145:8080";
 
     // ========================================
-    // 4. Apple store → 8888 (before Apple DIRECT)
+    // 4. Google OAuth / antigravity → 8888
+    // ========================================
+    if (dnsDomainIs(host, "antigravity.google")) return "PROXY 192.168.103.145:8888";
+
+    // ========================================
+    // 5. Apple store → 8888 (before Apple 8080)
     // ========================================
     if (dnsDomainIs(host, "apps.apple.com") || host === "apps.apple.com") return "PROXY 192.168.103.145:8888";
     if (dnsDomainIs(host, "itunes.apple.com") || host === "itunes.apple.com") return "PROXY 192.168.103.145:8888";
     if (dnsDomainIs(host, "blobstore.apple.com") || host === "blobstore.apple.com") return "PROXY 192.168.103.145:8888";
 
     // ========================================
-    // 5. 8080 domain suffixes
+    // 6. 8080 domain suffixes
     // ========================================
     var direct_sfx = [
         "local","localhost",
@@ -64,7 +69,7 @@ function FindProxyForURL(url, host) {
     }
 
     // ========================================
-    // 6. DIRECT domain keywords
+    // 7. 8080 domain keywords
     // ========================================
     var direct_kw = ["baidu","alibaba","alicdn","alipay","taobao","tencent",
         "bilibili","weibo","douyin","bytedance","xiaomi","huawei","netease",
@@ -75,7 +80,7 @@ function FindProxyForURL(url, host) {
     }
 
     // ========================================
-    // 7. Private/LAN IPs → DIRECT
+    // 8. Private/LAN IPs → DIRECT
     // ========================================
     if (shExpMatch(host, "10.*") || shExpMatch(host, "17.*") ||
         shExpMatch(host, "127.*") || shExpMatch(host, "192.168.*") ||
@@ -100,7 +105,7 @@ function FindProxyForURL(url, host) {
     }
 
     // ========================================
-    // 8. Known CN domains → 8080
+    // 9. Known CN domains → 8080
     // ========================================
     var cn_domains = [
         "baidu.com","bilibili.com","taobao.com","tmall.com","alibaba.com",
@@ -120,7 +125,7 @@ function FindProxyForURL(url, host) {
     }
 
     // ========================================
-    // 9. Everything else → 8888 (International)
+    // 10. Everything else → 8888 (International)
     // ========================================
     return "PROXY 192.168.103.145:8888";
 }
