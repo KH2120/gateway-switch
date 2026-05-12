@@ -1,0 +1,99 @@
+# ===================================================
+# 1. 基础内核设置 (优化开发环境响应速度)
+# ===================================================
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: false
+unified-delay: true
+tcp-concurrent: true
+
+# 虚拟网卡模式 (TUN)：确保终端、Docker、Git 都能自动分流
+tun:
+  enable: true
+  stack: system
+  auto-route: true
+  auto-detect-interface: true
+
+# DNS 配置：解决公司内网 DNS 无法解析外网的问题
+dns:
+  enable: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  default-nameserver: [223.5.5.5, 119.29.29.29]
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+# ===================================================
+# 2. 搬砖的人 (定义网关)
+# ===================================================
+proxies:
+  - name: "公司国内-8080"
+    type: http
+    server: 192.168.103.145
+    port: 8080
+
+  - name: "公司国外-8888"
+    type: http
+    server: 192.168.103.145
+    port: 8888
+
+# ===================================================
+# 3. 部门组织 (策略组：Rules 必须指向这里)
+# ===================================================
+proxy-groups:
+  - name: "国内自动通道"
+    type: select
+    proxies:
+      - "公司国内-8080"
+      - DIRECT
+
+  - name: "海外自动通道"
+    type: select
+    proxies:
+      - "公司国外-8888"
+      - "国内自动通道" # 备选
+
+# ===================================================
+# 4. 总指挥部 (自动化分流规则)
+# ===================================================
+rules:
+  # --- 第一层：广告与拦截 ---
+  - DOMAIN-KEYWORD,admarvel,REJECT
+  - DOMAIN-KEYWORD,admaster,REJECT
+  - DOMAIN-SUFFIX,doubleclick.net,REJECT
+
+  # --- 第二层：本地与局域网 (DIRECT) ---
+  - DOMAIN-SUFFIX,local,DIRECT
+  - DOMAIN,localhost,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+
+  # --- 第三层：开发者专项 (强制 8888) ---
+  - DOMAIN-SUFFIX,antigravity.google,海外自动通道
+  - DOMAIN-KEYWORD,github,海外自动通道
+  - DOMAIN-KEYWORD,google,海外自动通道
+  - DOMAIN-KEYWORD,openai,海外自动通道
+  - DOMAIN-SUFFIX,apps.apple.com,海外自动通道
+
+  # --- 第四层：国内大厂与常用服务 (强制 8080) ---
+  # 涵盖了你之前 PAC 里的所有关键词
+  - DOMAIN-KEYWORD,baidu,国内自动通道
+  - DOMAIN-KEYWORD,tencent,国内自动通道
+  - DOMAIN-KEYWORD,alibaba,国内自动通道
+  - DOMAIN-KEYWORD,taobao,国内自动通道
+  - DOMAIN-KEYWORD,bilibili,国内自动通道
+  - DOMAIN-KEYWORD,bytedance,国内自动通道
+  - DOMAIN-SUFFIX,zhihu.com,国内自动通道
+  - DOMAIN-SUFFIX,csdn.net,国内自动通道
+  - DOMAIN-SUFFIX,gitee.com,国内自动通道
+  - DOMAIN-SUFFIX,cn,国内自动通道 # 所有 .cn 结尾的域名
+
+  # --- 第五层：地理位置智能兜底 (全自动的核心) ---
+  - GEOIP,CN,国内自动通道 # 只要是中国 IP，统统去 8080
+
+  # --- 第六层：剩余所有流量 (默认去 8888) ---
+  - MATCH,海外自动通道
